@@ -1,9 +1,15 @@
 name := "twitter-classifier"
 
-version := "1.0"
+version := "0.1"
 
 scalaVersion := "2.11.8"
 val sparkVersion = "2.3.2"
+//lazy val `classifier` = project.dependsOn(project)
+//lazy val `preprocessor` = project.dependsOn(project)
+//lazy val `streamer` = project.dependsOn(project)
+
+//lazy val `twiter_classifier` = project
+
 
 resolvers ++= Seq(
   "bintray-spark-packages" at "https://dl.bintray.com/spark-packages/maven/",
@@ -20,5 +26,6 @@ libraryDependencies ++= Seq(
 )
 
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-  artifact.name + "_" + sv.binary + "-" + sparkVersion + "_" + module.revision + "." + artifact.extension
+  artifact.name + "." + artifact.extension
+//  artifact.name + "_" + sv.binary + "-" + sparkVersion + "_" + module.revision + "." + artifact.extension
 }
