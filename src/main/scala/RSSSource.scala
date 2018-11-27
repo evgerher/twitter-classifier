@@ -4,13 +4,12 @@ import java.util.Date
 import com.rometools.rome.feed.synd.{SyndEntry, SyndFeed}
 import com.rometools.rome.io.{SyndFeedInput, XmlReader}
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-private[rss] class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, String], connectTimeout: Int = 1000, readTimeout: Int = 1000) extends Serializable with Logger {
+private class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, String], connectTimeout: Int = 1000, readTimeout: Int = 1000) extends Serializable with Logger {
 
-  private[rss] var lastIngestedDates = mutable.Map[String, Long]()
+  private var lastIngestedDates = mutable.Map[String, Long]()
 
   def reset(): Unit = {
     lastIngestedDates.clear()
@@ -45,7 +44,7 @@ private[rss] class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, 
           link = feed.getLink
         )
 
-        feed.getEntries
+        feed.getEntries.asScala
           .filter(entry => {
             val date = Math.max(safeDateGetTime(entry.getPublishedDate), safeDateGetTime(entry.getUpdatedDate))
             lastIngestedDates.get(url).isEmpty || date > lastIngestedDates(url)
@@ -56,7 +55,7 @@ private[rss] class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, 
               uri = feedEntry.getUri,
               title = feedEntry.getTitle,
               links = getLinks(feedEntry),
-              content = feedEntry.getContents.map(c => RSSContent(contentType = c.getType, mode = c.getMode, value = c.getValue)).toList,
+              content = feedEntry.getContents.asScala.map(c => RSSContent(contentType = c.getType, mode = c.getMode, value = c.getValue)).toList,
               description = feedEntry.getDescription match {
                 case null => null
                 case d => RSSContent(
@@ -65,11 +64,11 @@ private[rss] class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, 
                   value = d.getValue
                 )
               },
-              enclosures = feedEntry.getEnclosures.map(e => RSSEnclosure(url = e.getUrl, enclosureType = e.getType, length = e.getLength)).toList,
+              enclosures = feedEntry.getEnclosures.asScala.map(e => RSSEnclosure(url = e.getUrl, enclosureType = e.getType, length = e.getLength)).toList,
               publishedDate = safeDateGetTime(feedEntry.getPublishedDate),
               updatedDate = safeDateGetTime(feedEntry.getUpdatedDate),
-              authors = feedEntry.getAuthors.map(a => RSSPerson(name = a.getName, uri = a.getUri, email = a.getEmail)).toList,
-              contributors = feedEntry.getContributors.map(c => RSSPerson(name = c.getName, uri = c.getUri, email = c.getEmail)).toList
+              authors = feedEntry.getAuthors.asScala.map(a => RSSPerson(name = a.getName, uri = a.getUri, email = a.getEmail)).toList,
+              contributors = feedEntry.getContributors.asScala.map(c => RSSPerson(name = c.getName, uri = c.getUri, email = c.getEmail)).toList
             )
             markStored(entry, url)
             entry
@@ -77,7 +76,7 @@ private[rss] class RSSSource(feedURLs: Seq[String], requestHeaders: Map[String, 
       })
   }
 
-  private[rss] def fetchFeeds(): Seq[Option[(String, SyndFeed)]] = {
+  private def fetchFeeds(): Seq[Option[(String, SyndFeed)]] = {
     feedURLs.map(url => {
       try {
         val connection = new URL(url).openConnection()

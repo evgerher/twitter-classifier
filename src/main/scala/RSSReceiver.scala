@@ -3,7 +3,7 @@ import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.receiver.Receiver
 
-private[rss] class RSSReceiver(feedURLs: Seq[String],
+private class RSSReceiver(feedURLs: Seq[String],
                                requestHeaders: Map[String, String],
                                storageLevel: StorageLevel,
                                connectTimeout: Int = 1000,
@@ -11,7 +11,7 @@ private[rss] class RSSReceiver(feedURLs: Seq[String],
                                pollingPeriodInSeconds: Int = 60)
   extends Receiver[RSSEntry](storageLevel) with Logger {
 
-  @volatile private[rss] var source = new RSSSource(
+  @volatile private var source = new RSSSource(
     feedURLs = feedURLs,
     requestHeaders = requestHeaders,
     connectTimeout = connectTimeout,
@@ -40,7 +40,7 @@ private[rss] class RSSReceiver(feedURLs: Seq[String],
     source.reset()
   }
 
-  private[rss] def poll(): Unit = {
+  private def poll(): Unit = {
     try {
       source.fetchEntries().foreach(entry=>{
         store(entry)
