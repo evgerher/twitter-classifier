@@ -1,3 +1,5 @@
+package streamer
+
 import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 import org.apache.spark.storage.StorageLevel

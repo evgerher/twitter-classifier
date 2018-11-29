@@ -1,3 +1,5 @@
+package streamer
+
 trait Logger {
 //  @transient private lazy val log = LogFactory.getLog(this.getClass)
   def logDebug(message: String): Unit = println(message)

@@ -1,3 +1,5 @@
+package streamer
+
 case class RSSEntry(
                      source: RSSFeed,
                      uri: String,
