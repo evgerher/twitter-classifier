@@ -27,8 +27,10 @@ private class RSSReceiver(feedURLs: Seq[String],
     // Make sure the polling period does not exceed 1 request per second.
     val normalizedPollingPeriod = Math.max(1, pollingPeriodInSeconds)
 
-    executor.scheduleAtFixedRate(() => {
-      poll()
+    executor.scheduleAtFixedRate(new Thread("Polling thread") {
+      override def run(): Unit = {
+        poll()
+      }
     }, 1, normalizedPollingPeriod, TimeUnit.SECONDS)
 
   }
@@ -47,7 +49,8 @@ private class RSSReceiver(feedURLs: Seq[String],
       })
     } catch {
       case e: Exception =>
-        logError("Unable to fetch RSS entries.", e)
+        println("Unable to fetch RSS entries.")
+//        logError("Unable to fetch RSS entries.", e)
     }
   }
 

@@ -13,6 +13,7 @@ class RSSInputDStream(feedURLs: Seq[String],
   extends ReceiverInputDStream[RSSEntry](ssc) with Logger{
 
   override def getReceiver(): Receiver[RSSEntry] = {
+    println("Creating RSS receiver")
     logDebug("Creating RSS receiver")
     new RSSReceiver(
       feedURLs = feedURLs,
