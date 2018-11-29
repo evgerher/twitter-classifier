@@ -9,13 +9,14 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 import classifier._
+import preprocessing._
 
 object RSSDemo {
-  val set = new mutable.TreeSet[String]
   val batch = new ListBuffer[String]()
-  val durationSeconds = 15
+  val durationSeconds = 5
   val sparkSession: SparkSession = initSpark()
   val ssc: StreamingContext = initStreamingContext(sparkSession)
+  val tweetPreprocessor: PreprocessTweet = new PreprocessTweet(ssc)
 
   def initSpark(): SparkSession = {
     val conf = new SparkConf()
@@ -49,7 +50,9 @@ object RSSDemo {
         rdd
         .toDS()
         .select("title")
-        .map(process_row)
+//        .collect()
+//        .foreach(println)
+        .map(tweetPreprocessor.preprocessText)
         .filter(_.length > 0)
         .foreach(println(_))
     })
@@ -57,23 +60,5 @@ object RSSDemo {
     // run forever
     ssc.start()
     ssc.awaitTermination()
-  }
-
-  def process_row(item: Row): String = {
-//    println(item)
-    val a: String = item.getString(0).trim
-//    println(s"The row is ${a}")
-    if (!set.contains(a)) {
-//      println(s"New message came :: ${a}")
-      set.add(a)
-      return a
-    } else {
-      return ""
-    }
-  }
-
-  def process_twits(list: List[String]): Unit = {
-    val df = new TwitsBatch(sparkSession, list).getDataSet()
-    df.collect().foreach(println)
   }
 }

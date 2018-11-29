@@ -6,7 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object Preprocessing {
 
   def main(args: Array[String]): Unit = {
-    val input = "晚安"
+    val input = "@khezamie He's escalating this. #Russia been making moves last couple days that suggest something bigger is on the herizon."
     val result = input.toLowerCase()
       .replaceAll("\n", "")
       .replaceAll("rt\\s+", "")
