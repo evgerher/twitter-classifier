@@ -1,10 +1,10 @@
 package classifier
 
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.apache.spark.sql.{Row, SparkSession}
 
-class TwitsBatch(spark: SparkSession, twits: Array[String]) {
-  def getDataSet(): Unit = {
+class TwitsBatch(spark: SparkSession, twits: List[String]) {
+  def getDataSet(): DataFrame = {
     val rows = twits.map{x => Row(x:_*)}
     val rdd = spark.sparkContext.makeRDD[Row](rows)
 
@@ -14,6 +14,6 @@ class TwitsBatch(spark: SparkSession, twits: Array[String]) {
 
     val schema = StructType.apply(fieldList)
 
-    val df = spark.createDataFrame(rdd, schema)
+    return spark.createDataFrame(rdd, schema)
   }
 }
