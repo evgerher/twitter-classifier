@@ -29,9 +29,7 @@ object RSSDemo {
     stream.foreachRDD(rdd=>{
       val spark = SparkSession.builder().appName(sc.appName).getOrCreate()
       import spark.sqlContext.implicits._
-//      rdd.toDS().show()
       rdd.toDS().select("title").collect().foreach(process_row)
-//      rdd.toDS().select("description").collect().foreach(process_row)
     })
 
     // run forever
