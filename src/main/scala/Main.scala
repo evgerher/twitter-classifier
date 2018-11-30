@@ -46,7 +46,7 @@ object Main {
       .option("header", "true")
       .load("file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/src/main/resources//train.csv")
     val df = training.withColumn("Sentiment", training.col("Sentiment").cast(IntegerType))
-  //  val df = training.withColumn("Sentiment", training.col("Sentiment").cast(DoubleType))
+    //  val df = training.withColumn("Sentiment", training.col("Sentiment").cast(DoubleType))
     //df.show(20)
 
 
@@ -56,20 +56,85 @@ object Main {
 
     all.show(20)
 
-    val temp = new Model()
+
 
     val train_df = train.toDF("ItemID", "label", "SentimentText")
     val test_df = test.toDF("ItemID", "label", "SentimentText")
 
+    /* find best model using CV
     val findModel = new MLFindModel()
     findModel.findBestParamsOfBayes(train_df,test_df)
-    return
+    */
 
-    temp.train(train_df)
-    val res = temp.get(test_df)
+    // train and answer query
+    val model = new Model()
+    model.train(train_df)
+    val res = model.get(test_df)
     res.show(20)
 
+    /*
+    not forget change local path to  path on your machine and cluster
+    just answer query:
+    val model = new Model()
+    val res = model.get(test_df)
+    res.show(20)
+     */
+
     session.stop()
+  }
+
+
+
+  /* Main model for training
+  *   Before it, need to create config, session
+  *  read data
+  * */
+  class Model{
+    /*
+       This function need to have datafrane to train model on
+       it should have columns "ItemID","label","SentimentText"
+       maybe without id
+     */
+    def train(train_data : DataFrame): Unit = {
+      val tokenizer = new Tokenizer()
+        .setInputCol("SentimentText")
+        .setOutputCol("Variants")
+
+      val hashingTF = new HashingTF()
+        .setNumFeatures(5000)
+        .setInputCol(tokenizer.getOutputCol)
+        .setOutputCol("features")
+
+      val lsvc = new LinearSVC()
+        .setMaxIter(5)
+        .setRegParam(0.01)
+
+      val pipeline = new Pipeline()
+        .setStages(Array(tokenizer, hashingTF, lsvc))
+
+      val model = pipeline.fit(train_data);
+      val path = "Model"
+      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
+      model.write.overwrite().save(local_path);
+      println("OK! saved model")
+    }
+
+    /*
+       This function need to have datafrane to test model on
+       it should have columns "ItemID","SentimentText"
+       maybe without id
+       should be the same as for train but without label
+       answer in column 'predicition'
+     */
+    def get(test : DataFrame) : DataFrame =  {
+      val path = "Model"
+      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
+      val model = PipelineModel.load(local_path)
+      val observations = model.transform(test)
+      println("OK!")
+      return observations
+    }
+
   }
 
   class MLFindModel{
@@ -336,7 +401,6 @@ object Main {
       println("\n\n\n\n\n")
     }
 
-
     def findBestParamsOfBayes(train: DataFrame, test : DataFrame) : Unit = {
       val tokenizer = new Tokenizer()
         .setInputCol("SentimentText")
@@ -400,64 +464,7 @@ object Main {
       println("\n\n\n\n\n")
     }
 
-
-
-  }
-
-  /* Main model for training
-  *   Before it, need to create config, session
-  *  read data
-  * */
-  class Model{
-
-    /*
-       This function need to have datafrane to train model on
-       it should have columns "ItemID","label","SentimentText"
-       maybe without id
-     */
-    def train(train_data : DataFrame): Unit = {
-      val tokenizer = new Tokenizer()
-        .setInputCol("SentimentText")
-        .setOutputCol("Variants")
-
-      val hashingTF = new HashingTF()
-        .setNumFeatures(5000)
-        .setInputCol(tokenizer.getOutputCol)
-        .setOutputCol("features")
-
-      val lr = new LogisticRegression()
-        .setMaxIter(100)
-        .setRegParam(0.1)
-
-      val pipeline = new Pipeline()
-        .setStages(Array(tokenizer, hashingTF, lr))
-
-      val model = pipeline.fit(train_data);
-      val path = "Model"
-      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
-      model.write.overwrite().save(local_path);
-      println("OK! saved model")
-    }
-
-    /*
-       This function need to have datafrane to test model on
-       it should have columns "ItemID","SentimentText"
-       maybe without id
-       should be the same as for train but without label
-       answer in column 'predicition'
-     */
-    def get(test : DataFrame) : DataFrame =  {
-      val path = "Model"
-      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
-      val model = PipelineModel.load(local_path)
-      val observations = model.transform(test)
-      println("OK!")
-      return observations
-    }
-
   }
 
 
 }
-
-
