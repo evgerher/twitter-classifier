@@ -5,6 +5,7 @@ import org.apache.spark.ml.feature.{HashingTF, LabeledPoint, Tokenizer}
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.sql.{SparkSession}
 import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.ml.classification.{RandomForestClassificationModel, RandomForestClassifier}
 
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
@@ -58,7 +59,7 @@ object Main {
     val test_df = test.toDF("ItemID", "label", "SentimentText")
 
     val findModel = new MLFindModel()
-    findModel.findBestParamsOfSVM(train_df,test_df)
+    findModel.findBestParamsOfForest(train_df,test_df)
     return
 
     temp.train(train_df)
@@ -267,10 +268,85 @@ object Main {
       println("\n\n\n\n\n")
     }
 
+
+    def findBestParamsOfForest(train: DataFrame, test : DataFrame) : Unit = {
+      val tokenizer = new Tokenizer()
+        .setInputCol("SentimentText")
+        .setOutputCol("Variants")
+
+      val hashingTF = new HashingTF()
+        .setNumFeatures(1000)
+        .setInputCol(tokenizer.getOutputCol)
+        .setOutputCol("features")
+
+      val rf = new RandomForestClassifier()
+        .setNumTrees(10)
+
+      val pipeline = new Pipeline()
+        .setStages(Array(tokenizer, hashingTF, rf))
+
+      val paramGrid = new ParamGridBuilder()
+        .addGrid(hashingTF.numFeatures, Array(1000,5000))
+        .addGrid(rf.numTrees, Array(10,5,20))
+        .build() // Get 3 by 2 grid with 6 parameter pairs to evaluate
+
+      val cv = new CrossValidator()
+        .setEstimator(pipeline) // provide your pipeline
+        .setEvaluator(new BinaryClassificationEvaluator())
+        .setEstimatorParamMaps(paramGrid)
+        .setNumFolds(3) // Use 3+ in practice
+        .setParallelism(4) // Evaluate up to 2 parameter settings in parallel
+
+      val cvModel = cv.fit(train);
+
+      println("Best params for model")
+      val bestParams = cvModel.getEstimatorParamMaps
+        .zip(cvModel.avgMetrics)
+        .maxBy(_._2)
+        ._1;
+      print(bestParams)
+      println("")
+
+      val observations = cvModel.transform(test)
+
+      val predictionLabelsRDD = observations.select("prediction", "label").rdd.map { r =>
+        val a = java.lang.Double.parseDouble(r.get(0).toString)
+        val b = java.lang.Double.parseDouble(r.get(1).toString)
+        (a * 1.0, b * 1.0)
+      }
+      val metrics = new BinaryClassificationMetrics(predictionLabelsRDD)
+
+      val precision = metrics.precisionByThreshold
+
+      val recall = metrics.recallByThreshold
+
+      val metrics1 = new MulticlassMetrics(predictionLabelsRDD)
+
+      println("\n\n\n\n\n")
+      precision.foreach { case (t, p) =>
+        println(s"Threshold: $t, Precision: $p")
+      }
+      recall.foreach { case (t, p) =>
+        println(s"Threshold: $t, Recall : $p")
+      }
+      println("Accuracy : "+ metrics1.accuracy)
+
+      println("\n\n\n\n\n")
+    }
+
   }
 
+  /* Main model for training
+  *   Before it, need to create config, session
+  *  read data
+  * */
   class Model{
 
+    /*
+       This function need to have datafrane to train model on
+       it should have columns "ItemID","label","SentimentText"
+       maybe without id
+     */
     def train(train_data : DataFrame): Unit = {
       val tokenizer = new Tokenizer()
         .setInputCol("SentimentText")
@@ -295,6 +371,13 @@ object Main {
       println("OK! saved model")
     }
 
+    /*
+       This function need to have datafrane to test model on
+       it should have columns "ItemID","SentimentText"
+       maybe without id
+       should be the same as for train but without label
+       answer in column 'predicition'
+     */
     def get(test : DataFrame) : DataFrame =  {
       val path = "Model"
       val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
