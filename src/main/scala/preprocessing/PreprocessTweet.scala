@@ -20,29 +20,40 @@ class PreprocessTweet {
   def preprocessText(item: Row): String = {
     val tweetText: String = item.getString(0).trim
 
-    //    some manipulations with Dataset
     val processedTweetList = tweetText.toLowerCase()
       .replaceAll("\n", "")
       .replaceAll("rt\\s+", "")
       .replaceAll("\\s+@\\w+", "")
       .replaceAll("@\\w+", "")
+      .replaceAll("\\s+#\\w+", "")
+      .replaceAll("#\\w+", "")
       .replaceAll("(?:https?|http?)://[\\w/%.-]+", "")
       .replaceAll("(?:https?|http?)://[\\w/%.-]+\\s+", "")
       .replaceAll("(?:https?|http?)//[\\w/%.-]+\\s+", "")
       .replaceAll("(?:https?|http?)//[\\w/%.-]+", "")
-      .split("")
+      .split("\\W+")
       .filter(_.matches("^[a-zA-Z ]+$"))
-      .filterNot(stopWordsSet).toList
-
-    val sb: StringBuilder = new StringBuilder()
-    for (i <- 1 until processedTweetList.length) {
-      if (processedTweetList(i) != processedTweetList(i - 1)) {
-        sb.append(processedTweetList(i - 1))
-        if (i == processedTweetList.length - 1 || i == 0) {
-          sb.append(processedTweetList(i))
+      .filterNot(stopWordsSet)
+    var sb: StringBuilder = new StringBuilder()
+    for (i <- processedTweetList.indices) {
+      sb.append(processedTweetList(i))
+      if (i != processedTweetList.length - 1) {
+        sb.append(" ")
+      }
+    }
+    val result = sb.toString()
+      .split("")
+      .toList
+    sb = new StringBuilder()
+    for (i <- 1 until result.length) {
+      if (result(i) != result(i - 1)) {
+        sb.append(result(i - 1))
+        if (i == result.length - 1) {
+          sb.append(result(i))
         }
       }
     }
+
     val filtered = sb.toString()
 
     if (filtered.length == 0)
