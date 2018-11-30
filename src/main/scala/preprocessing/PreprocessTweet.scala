@@ -20,7 +20,7 @@ class PreprocessTweet {
   def preprocessText(item: Row): String = {
     val tweetText: String = item.getString(0).trim
 
-    val processedTweetList = tweetText.toLowerCase()
+    val resultList = tweetText.toLowerCase()
       .replaceAll("\n", "")
       .replaceAll("rt\\s+", "")
       .replaceAll("\\s+@\\w+", "")
@@ -35,9 +35,9 @@ class PreprocessTweet {
       .filter(_.matches("^[a-zA-Z ]+$"))
       .filterNot(stopWordsSet)
     var sb: StringBuilder = new StringBuilder()
-    for (i <- processedTweetList.indices) {
-      sb.append(processedTweetList(i))
-      if (i != processedTweetList.length - 1) {
+    for (i <- resultList.indices) {
+      sb.append(resultList(i))
+      if (i != resultList.length - 1) {
         sb.append(" ")
       }
     }
@@ -45,12 +45,19 @@ class PreprocessTweet {
       .split("")
       .toList
     sb = new StringBuilder()
+    var count = 0
     for (i <- 1 until result.length) {
-      if (result(i) != result(i - 1)) {
+      if (result(i) != result(i - 1)
+        || (i != result.length - 1 && count < 2 && result(i) != result(i + 1))) {
         sb.append(result(i - 1))
         if (i == result.length - 1) {
           sb.append(result(i))
         }
+        count = 0
+      } else if (i == result.length - 1) {
+        sb.append(result(i))
+      } else {
+        count += 1
       }
     }
 
