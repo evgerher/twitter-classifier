@@ -52,54 +52,55 @@ object Main {
 
     all.show(20)
 
+    val temp = new Model()
+
+
+
     val train_df = train.toDF("ItemID", "label", "SentimentText")
     val test_df = test.toDF("ItemID", "label", "SentimentText")
 
-    val tokenizer = new Tokenizer()
-      .setInputCol("SentimentText")
-      .setOutputCol("Variants")
-
-    val hashingTF = new HashingTF()
-      .setNumFeatures(5000)
-      .setInputCol(tokenizer.getOutputCol)
-      .setOutputCol("features")
-
-    val lr = new LogisticRegression()
-      .setMaxIter(100)
-      .setRegParam(0.1)
-
-    val pipeline = new Pipeline()
-      .setStages(Array(tokenizer, hashingTF, lr))
-
-   // findBestParamsOfLogistic(train_df,test_df)
-
-   // findBestParamsOfGradientBoosting(train_df,test_df)
-
-    class Query {
-
-
-      def get(test : DataFrame) : DataFrame =  {
-        val path = "Model"
-        val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
-        val model = PipelineModel.load(local_path)
-        val observations = model.transform(test)
-        println("OK!")
-        return observations
-      }
-    }
-
-    val model = pipeline.fit(all);
-    val path = "Model"
-    val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
-    model.write.overwrite().save(local_path);
-    println("OK! saved model")
-
-
-    val caller = new Query()
-    val res = caller.get(test_df)
-    res.show(20);
+   // temp.train(train_df)
+    val res = temp.get(test_df)
+    res.show(20)
 
     session.stop()
+  }
+
+  class Model{
+
+    def train(train_data : DataFrame): Unit = {
+      val tokenizer = new Tokenizer()
+        .setInputCol("SentimentText")
+        .setOutputCol("Variants")
+
+      val hashingTF = new HashingTF()
+        .setNumFeatures(5000)
+        .setInputCol(tokenizer.getOutputCol)
+        .setOutputCol("features")
+
+      val lr = new LogisticRegression()
+        .setMaxIter(100)
+        .setRegParam(0.1)
+
+      val pipeline = new Pipeline()
+        .setStages(Array(tokenizer, hashingTF, lr))
+
+      val model = pipeline.fit(train_data);
+      val path = "Model"
+      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
+      model.write.overwrite().save(local_path);
+      println("OK! saved model")
+    }
+
+    def get(test : DataFrame) : DataFrame =  {
+      val path = "Model"
+      val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
+      val model = PipelineModel.load(local_path)
+      val observations = model.transform(test)
+      println("OK!")
+      return observations
+    }
+
   }
 
   def findBestParamsOfLogistic(train: DataFrame, test : DataFrame) : Unit = {
