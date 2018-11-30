@@ -26,5 +26,4 @@ class RSSInputDStream(feedURLs: Seq[String],
       pollingPeriodInSeconds = pollingPeriodInSeconds
     )
   }
-
 }
