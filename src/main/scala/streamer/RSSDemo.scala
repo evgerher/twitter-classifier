@@ -16,7 +16,7 @@ object RSSDemo {
   val durationSeconds = 5
   val sparkSession: SparkSession = initSpark()
   val ssc: StreamingContext = initStreamingContext(sparkSession)
-  val tweetPreprocessor: PreprocessTweet = new PreprocessTweet(ssc)
+  val tweetPreprocessor: PreprocessTweet = new PreprocessTweet(sparkSession)
 
   def initSpark(): SparkSession = {
     val conf = new SparkConf()

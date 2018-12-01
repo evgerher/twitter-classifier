@@ -1,30 +1,38 @@
 package preprocessing
 
-import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.catalyst.encoders.RowEncoder
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
-class PreprocessDataset {
+object PreprocessDataset {
+  def preprocess(session: SparkSession, src: String): Dataset[Row] = {
+    val processor: PreprocessTweet = new PreprocessTweet(session)
 
-  def preprocess() {
-    val config = new SparkConf()
-      .setMaster("local[*]")
-      .setAppName("Test app")
-      .set("spark.driver.bindAddress", "127.0.0.1")
-
-    val session = SparkSession.builder()
-      .config(config)
-      .appName("test")
-      .master("local")
-      .getOrCreate()
-
-    val training = session.read
+    val data = session.read
       .format("csv")
       .option("header", "true")
-      .load("file:///C:/Users/Aline/IdeaProjects/twitter-classifier/src/main/resources//train.csv")
-    val df = training.withColumn("Sentiment", training.col("Sentiment").cast(IntegerType))
+      .load(src)
 
-    val datasetList = df.select("SentimentText").rdd.map(r => r(0)).collect().toList
 
+    data.show(20)
+
+    val schema = StructType(Seq(
+      StructField("ItemID", StringType),
+      StructField("Sentiment", StringType),
+      StructField("SentimentText", StringType)
+    ))
+
+
+    val encoder = RowEncoder(schema)
+
+    val test = session.createDataset(data.rdd
+        .map(row => {
+          Row(row.getAs[String](0), row.getAs[String](1), processor.preprocessText(row.getAs[String](2)))
+        })
+    )(encoder)
+
+    test.show(20)
+
+    return test
   }
 }

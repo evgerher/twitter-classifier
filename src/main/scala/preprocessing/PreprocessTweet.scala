@@ -1,27 +1,25 @@
 package preprocessing
 
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.streaming.StreamingContext
 
 import scala.collection.mutable
 
-class PreprocessTweet {
+class PreprocessTweet extends Serializable {
   var set = new mutable.TreeSet[String]
   var stopWordsSet: Set[String] = null
 
-  def this(ssc: StreamingContext) {
+  def this(session: SparkSession) {
     this()
-    val stopFile = ssc
-      .sparkContext
-      .textFile(this.getClass.getResource("stop-words.txt").getPath)
+    val stopFile = session
+        .sparkContext
+        .textFile(this.getClass.getResource("stop-words.txt").getPath)
 //      .textFile("file:///C:/cygwin64/home/evger/twitter-classifier/src/main/resources/stop-words.txt")
     this.stopWordsSet = stopFile.collect().toSet
   }
 
-  def preprocessText(item: Row): String = {
-    val tweetText: String = item.getString(0).trim
-
-    val resultList = tweetText.toLowerCase()
+  def preprocessText(msg: String): String = {
+    val resultList = msg.toLowerCase()
       .replaceAll("\n", "")
       .replaceAll("rt\\s+", "")
       .replaceAll("\\s+@\\w+", "")
@@ -71,8 +69,14 @@ class PreprocessTweet {
       return ""
     } else {
       set.add(filtered)
-      println(s"ORIGINAL :: ${tweetText}")
+//      println(s"ORIGINAL :: ${msg}")
       return filtered
     }
+  }
+
+  def preprocessText(item: Row): String = {
+    val tweetText: String = item.getString(0).trim
+
+    return preprocessText(tweetText)
   }
 }
