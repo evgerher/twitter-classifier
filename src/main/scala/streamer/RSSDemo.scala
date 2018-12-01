@@ -1,16 +1,12 @@
 package streamer
 
-import org.apache.spark.sql.{Row, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import preprocessing._
 
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-
-import classifier._
-import preprocessing._
 
 object RSSDemo {
   val batch = new ListBuffer[String]()
