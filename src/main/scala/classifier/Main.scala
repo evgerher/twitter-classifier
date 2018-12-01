@@ -23,10 +23,14 @@ object Main {
       .master("local")
       .getOrCreate()
 
+    val dataset = "twits"
+
     val training = session.read
       .format("csv")
       .option("header", "true")
-      .load("file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/src/main/resources//train.csv")
+      .load(ModelLoader.getResourcePath(s"${dataset}/train.csv"))
+//      .load("file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/src/main/resources//train.csv")
+
     val df = training.withColumn("Sentiment", training.col("Sentiment").cast(IntegerType))
     //  val df = training.withColumn("Sentiment", training.col("Sentiment").cast(DoubleType))
     //df.show(20)
@@ -38,8 +42,6 @@ object Main {
 
     all.show(20)
 
-
-
     val train_df = train.toDF("ItemID", "label", "SentimentText")
     val test_df = test.toDF("ItemID", "label", "SentimentText")
 
@@ -49,7 +51,7 @@ object Main {
     */
 
     // train and answer query
-    val model = new Model()
+    val model = new Model(dataset)
     model.train(train_df)
     val res = model.get(test_df)
     res.show(20)

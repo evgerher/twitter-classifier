@@ -9,7 +9,7 @@ class TwitsBatch(spark: SparkSession, twits: List[String]) {
     val rdd = spark.sparkContext.makeRDD[Row](rows)
 
     val fieldList = List(
-      StructField("twits", StringType, true)
+      StructField("classifier/twits", StringType, true)
     )
 
     val schema = StructType.apply(fieldList)

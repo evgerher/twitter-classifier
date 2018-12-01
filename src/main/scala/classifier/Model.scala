@@ -9,12 +9,14 @@ import org.apache.spark.sql.DataFrame
   *   Before it, need to create config, session
   *  read data
   * */
-class Model{
+class Model(dataset: String) {
+//  val local_path = "file:///C:/cygwin64/home/evger/twitter-classifier/src/main/resources/model"
+  val local_path = ModelLoader.getModelFolder(dataset)
   /*
-     This function need to have datafrane to train model on
-     it should have columns "ItemID","label","SentimentText"
-     maybe without id
-   */
+       This function need to have datafrane to train model on
+       it should have columns "ItemID","label","SentimentText"
+       maybe without id
+     */
   def train(train_data : DataFrame): Unit = {
     val tokenizer = new Tokenizer()
       .setInputCol("SentimentText")
@@ -34,7 +36,6 @@ class Model{
 
     val model = pipeline.fit(train_data);
     val path = "Model"
-    val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
     model.write.overwrite().save(local_path);
     println("OK! saved model")
   }
@@ -48,7 +49,6 @@ class Model{
    */
   def get(test : DataFrame) : DataFrame =  {
     val path = "Model"
-    val local_path = "file:///C:/Users/the_art_of_war/IdeaProjects/twitter-classifier/model"
     val model = PipelineModel.load(local_path)
     val observations = model.transform(test)
     println("OK!")

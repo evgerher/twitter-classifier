@@ -13,7 +13,8 @@ class PreprocessTweet {
     this()
     val stopFile = ssc
       .sparkContext
-      .textFile("file:///C:/cygwin64/home/evger/twitter-classifier/src/main/resources/stop-words.txt")
+      .textFile(this.getClass.getResource("stop-words.txt").getPath)
+//      .textFile("file:///C:/cygwin64/home/evger/twitter-classifier/src/main/resources/stop-words.txt")
     this.stopWordsSet = stopFile.collect().toSet
   }
 
