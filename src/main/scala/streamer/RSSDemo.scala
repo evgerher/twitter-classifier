@@ -5,19 +5,19 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.collection.mutable.ListBuffer
 import classifier._
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.rdd.RDD
 import preprocessing._
 
 object RSSDemo {
-  val batch = new ListBuffer[String]()
-  val durationSeconds = 5
+  val DATASET = "twits"
+  val queryfeed = "https://queryfeed.net/twitter&title-type=tweet-text-full&order-by=recent&q=%23"
+  var tag: String = null
+  val durationSeconds = 10
   val sparkSession: SparkSession = initSpark()
   val ssc: StreamingContext = initStreamingContext(sparkSession)
   val tweetPreprocessor: PreprocessTweet = new PreprocessTweet(sparkSession)
-  val model: Model = new Model("twits")
+  val model: Model = new Model(DATASET)
   var count: Integer = 0
 
   def initSpark(): SparkSession = {
@@ -38,12 +38,8 @@ object RSSDemo {
   }
 
   def main(args: Array[String]) {
-//    val schema = StructType(Seq(
-//      StructField("SentimentText", StringType)
-//    ))
-//    val encoder = RowEncoder(schema)
-
-    val urlCSV = args(0)
+    tag = args(0)
+    val urlCSV = queryfeed + tag
     val urls = urlCSV.split(",")
     val stream = new RSSInputDStream(urls, Map[String, String](
       "User-Agent" -> "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
@@ -55,24 +51,31 @@ object RSSDemo {
       val filtered: Dataset[String] = rdd
         .toDS()
         .select("title")
-//        .map(row => {
-//          val s = row.getAs[String](0)
-//          Row(tweetPreprocessor.preprocessText(s))
-//        })(encoder)
         .map(tweetPreprocessor.preprocessText)
         .filter(_.length > 0)
 
       val predictedDF = model.get(filtered.toDF("SentimentText"))
-      predictedDF.rdd
-        .saveAsTextFile(s"file:///C:/cygwin64/home/evger/twitter-classifier/temp/result${count}")
-//      predictedDF.
-//        .write
-//        .csv(s"file:///C:/cygwin64/home/evger/twitter-classifier/result${count}")
-      count += 1
+
+      store(rdd, predictedDF.rdd)
     })
 
     // run forever
     ssc.start()
     ssc.awaitTermination()
+  }
+
+  def store(rdd: RDD[RSSEntry], predictions: RDD[Row]) = {
+    rdd
+      .saveAsTextFile(s"file:///C:/cygwin64/home/evger/twitter-classifier/temp/${tag}_input${count}")
+
+    predictions
+      .saveAsTextFile(s"file:///C:/cygwin64/home/evger/twitter-classifier/temp/${tag}_result${count}")
+    //      predictedDF.
+    //        .write
+    //        .csv(s"file:///C:/cygwin64/home/evger/twitter-classifier/result${count}")
+    count += 1
+
+    if (count == 10)
+      sparkSession.stop()
   }
 }

@@ -7,13 +7,13 @@ import org.apache.spark.sql.types.IntegerType
 import preprocessing.PreprocessDataset
 
 object Main {
+  val DATASET = "twits"
 
   def main(args: Array[String]) {
     val config = new SparkConf()
       .setMaster("local[*]")
       .setAppName("Test app")
       .set("spark.driver.bindAddress", "127.0.0.1") // todo: remove it later
-    //    val sc = new SparkContext(config)
 
     val rootLogger = Logger.getRootLogger()
     rootLogger.setLevel(Level.ERROR)
@@ -24,12 +24,10 @@ object Main {
       .master("local")
       .getOrCreate()
 
-    val dataset = "twits"
-
-    val trainingDSPath = ModelLoader.getResourcePath(s"${dataset}/train.csv")
+    val trainingDSPath = ModelLoader.getResourcePath(s"${DATASET}/train.csv")
     val data = PreprocessDataset.preprocess(session, trainingDSPath)
 
-//    val training = session.read
+//    val training = session.read  // TODO: USE IT IF YOU WISH NOT TO PREPROCESS DATA AND COMMENT A LINE ABOVE
 //      .format("csv")
 //      .option("header", "true")
 //      .load(ModelLoader.getResourcePath(ModelLoader.getResourcePath(s"${dataset}/train.csv"))
@@ -55,10 +53,10 @@ object Main {
     */
 
     // train and answer query
-    val model = new Model(dataset)
+    val model = new Model(DATASET)
     model.train(train_df)
     val res = model.get(test_df)
-//    res.show(20)
+    res.show(20)
 
     /*
     not forget change local path to  path on your machine and cluster
