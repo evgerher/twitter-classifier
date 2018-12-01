@@ -54,5 +54,4 @@ class Model(dataset: String) {
     println("OK!")
     return observations
   }
-
 }

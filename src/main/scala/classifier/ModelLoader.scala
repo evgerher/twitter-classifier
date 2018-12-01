@@ -9,8 +9,8 @@ object ModelLoader {
   }
 
   def getModelFolder(dataset: String): String = {
-    val res: String = this.getClass.getResource(s"${dataset}/model/p.txt").getPath
-    val dir: String = res.substring(0, res.lastIndexOf("/"))
+    val res: String = this.getClass.getResource(s"${dataset}/train.csv").getPath
+    val dir: String = res.substring(0, res.lastIndexOf("/")) + "/model"
     return dir
   }
 }
