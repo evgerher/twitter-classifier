@@ -3,7 +3,7 @@ package preprocessing
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
-object Preprocessing {
+object PreprocessingExample {
 
   def main(args: Array[String]): Unit = {
     val input = "@khezamie He's escalating this. #Russia been making moves last couple days that suggest something bigger is on the herizon."
