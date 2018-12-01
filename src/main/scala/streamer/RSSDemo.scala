@@ -4,6 +4,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
+import preprocessing._
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -28,11 +29,11 @@ object RSSDemo {
     val sparkSession = SparkSession.builder.config(conf).getOrCreate()
 
     sc.setLogLevel("ERROR")
-    (sparkSession)
+    sparkSession
   }
 
   def initStreamingContext(ss: SparkSession): StreamingContext = {
-    (new StreamingContext(ss.sparkContext, Seconds(durationSeconds)))
+    new StreamingContext(ss.sparkContext, Seconds(durationSeconds))
   }
 
   def main(args: Array[String]) {
@@ -54,7 +55,7 @@ object RSSDemo {
 //        .foreach(println)
         .map(tweetPreprocessor.preprocessText)
         .filter(_.length > 0)
-        .foreach(println(_))
+//        .foreach(println(_))
     })
 
     // run forever

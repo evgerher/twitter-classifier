@@ -22,8 +22,8 @@ libraryDependencies ++= Seq(
 
 libraryDependencies += "com.rometools" % "rome" % "1.11.1"
 
-artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
-  artifact.name + "." + artifact.extension
+artifactName := { (scalaVersion: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "." + artifact.extension  + "." + module + "Scala" + scalaVersion
 //  artifact.name + "_" + sv.binary + "-" + sparkVersion + "_" + module.revision + "." + artifact.extension
 }
 
