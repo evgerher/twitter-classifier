@@ -5,13 +5,14 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
+
 import classifier._
 import org.apache.spark.rdd.RDD
 import preprocessing._
 
 object RSSDemo {
   val DATASET = "twits"
-  val queryfeed = "https://queryfeed.net/twitter&title-type=tweet-text-full&order-by=recent&q=%23"
+  val queryfeed = "https://queryfeed.net/twitter?title-type=tweet-text-full&order-by=recent&q=%23"
   var tag: String = null
   val durationSeconds = 10
   val sparkSession: SparkSession = initSpark()
@@ -38,6 +39,7 @@ object RSSDemo {
   }
 
   def main(args: Array[String]) {
+
     tag = args(0)
     val urlCSV = queryfeed + tag
     val urls = urlCSV.split(",")
@@ -45,8 +47,7 @@ object RSSDemo {
       "User-Agent" -> "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
     ), ssc, StorageLevel.MEMORY_ONLY, pollingPeriodInSeconds = durationSeconds)
     stream.foreachRDD(rdd=>{
-      val spark = SparkSession.builder().appName(sparkSession.sparkContext.appName).getOrCreate()
-      import spark.sqlContext.implicits._
+      import sparkSession.sqlContext.implicits._
 
       val filtered: Dataset[String] = rdd
         .toDS()
@@ -65,6 +66,8 @@ object RSSDemo {
   }
 
   def store(rdd: RDD[RSSEntry], predictions: RDD[Row]) = {
+    import sparkSession.sqlContext.implicits._
+
     rdd
       .saveAsTextFile(s"file:///C:/cygwin64/home/evger/twitter-classifier/temp/${tag}_input${count}")
 
@@ -75,7 +78,9 @@ object RSSDemo {
     //        .csv(s"file:///C:/cygwin64/home/evger/twitter-classifier/result${count}")
     count += 1
 
-    if (count == 10)
+    if (count == 4) {
+      ssc.stop(true, true)
       sparkSession.stop()
+    }
   }
 }
