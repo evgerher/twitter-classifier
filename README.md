@@ -34,6 +34,6 @@ Scala language and Apache Spark framework and includes several stages:
 * RDDs are generated each 10 seconds.
 
 ### References
-[QueryFeed](http://queryfeed.net/)
-[RSS streaming GitHub repository](https://github.com/CatalystCode/streaming-rss-html)
+[QueryFeed](http://queryfeed.net/) \
+[RSS streaming GitHub repository](https://github.com/CatalystCode/streaming-rss-html) \
 [Twitter Sentiment Analysis](https://www.kaggle.com/c/twitter-sentiment-analysis2/data)
